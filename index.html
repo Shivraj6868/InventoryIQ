@@ -1,0 +1,175 @@
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Product Inventory &amp; Analytics Dashboard</title>
+  <link rel="stylesheet" href="./style.css" />
+  <script src="./script.js" defer></script>
+</head>
+<body>
+  <header class="app-header">
+    <div class="container header-inner">
+      <div>
+        <h1>📦 Inventory &amp; Analytics Dashboard</h1>
+        <p class="subtitle">Manage products, track inventory value and calculate tax &amp; discounts.</p>
+      </div>
+      <button type="button" id="resetBtn" class="btn btn-ghost">Reset to Sample Data</button>
+    </div>
+  </header>
+
+  <main class="container">
+    <!-- Global message area (success / error / info) -->
+    <div id="message" class="message hidden" role="status" aria-live="polite"></div>
+
+    <!-- Dashboard summary -->
+    <section aria-labelledby="summary-title">
+      <h2 id="summary-title" class="section-title">Dashboard Summary</h2>
+      <div class="cards">
+        <article class="card stat">
+          <span class="stat-label">Total Products</span>
+          <span class="stat-value" id="statTotal">0</span>
+        </article>
+        <article class="card stat">
+          <span class="stat-label">Total Inventory Value</span>
+          <span class="stat-value" id="statValue">₹0.00</span>
+          <span class="stat-note">Sum of all product prices</span>
+        </article>
+        <article class="card stat">
+          <span class="stat-label">Average Price</span>
+          <span class="stat-value" id="statAverage">₹0.00</span>
+          <span class="stat-note">Total value ÷ product count</span>
+        </article>
+        <article class="card stat">
+          <span class="stat-label">Budget Products</span>
+          <span class="stat-value" id="statBudget">0</span>
+        </article>
+        <article class="card stat">
+          <span class="stat-label">Premium Products</span>
+          <span class="stat-value" id="statPremium">0</span>
+        </article>
+      </div>
+    </section>
+
+    <div class="grid-2">
+      <!-- Add product -->
+      <section class="card" aria-labelledby="add-title">
+        <h2 id="add-title" class="section-title">Add Product</h2>
+        <form id="productForm" novalidate>
+          <input type="hidden" id="editId" />
+          <div class="field">
+            <label for="productName">Product name</label>
+            <input type="text" id="productName" maxlength="60" placeholder="e.g. Bluetooth Speaker" autocomplete="off" />
+          </div>
+          <div class="field">
+            <label for="productPrice">Price (₹)</label>
+            <input type="text" inputmode="decimal" id="productPrice" placeholder="e.g. 1499" autocomplete="off" />
+          </div>
+          <p class="hint">Budget: below ₹<span id="thresholdHint">1,000</span> &middot; Premium: ₹<span id="thresholdHint2">1,000</span> or more</p>
+          <div class="btn-row">
+            <button type="submit" id="submitBtn" class="btn btn-primary">Add Product</button>
+            <button type="button" id="cancelEditBtn" class="btn btn-ghost hidden">Cancel Edit</button>
+            <button type="button" id="promptBtn" class="btn btn-secondary">Add Product Using Prompt</button>
+          </div>
+        </form>
+      </section>
+
+      <!-- Tax & discount calculator -->
+      <section class="card" aria-labelledby="calc-title">
+        <h2 id="calc-title" class="section-title">Tax &amp; Discount Calculator</h2>
+        <form id="calcForm" novalidate>
+          <div class="field">
+            <label for="calcProduct">Select product</label>
+            <select id="calcProduct"></select>
+          </div>
+          <div class="two-col">
+            <div class="field">
+              <label for="discountRate">Discount (%)</label>
+              <input type="text" inputmode="decimal" id="discountRate" value="0" />
+            </div>
+            <div class="field">
+              <label for="taxRate">Tax (%)</label>
+              <input type="text" inputmode="decimal" id="taxRate" value="18" />
+            </div>
+          </div>
+          <button type="submit" class="btn btn-primary">Calculate</button>
+        </form>
+        <p class="hint">Order: 1) discount on original price → 2) subtract it → 3) tax on discounted price → 4) add tax.</p>
+        <p id="calcError" class="inline-error hidden" role="alert"></p>
+        <dl id="calcResult" class="result hidden">
+          <div><dt>Original price</dt><dd id="resOriginal"></dd></div>
+          <div><dt>Discount amount</dt><dd id="resDiscount"></dd></div>
+          <div><dt>Price after discount</dt><dd id="resDiscounted"></dd></div>
+          <div><dt>Tax amount</dt><dd id="resTax"></dd></div>
+          <div class="final"><dt>Final price</dt><dd id="resFinal"></dd></div>
+        </dl>
+      </section>
+    </div>
+
+    <!-- Inventory -->
+    <section class="card" aria-labelledby="inv-title">
+      <h2 id="inv-title" class="section-title">Inventory</h2>
+      <div class="toolbar">
+        <div class="field grow">
+          <label for="searchInput">Search by name</label>
+          <input type="search" id="searchInput" placeholder="Type to search…" autocomplete="off" />
+        </div>
+        <div class="field">
+          <label for="categoryFilter">Category</label>
+          <select id="categoryFilter">
+            <option value="All">All</option>
+            <option value="Budget">Budget</option>
+            <option value="Premium">Premium</option>
+          </select>
+        </div>
+      </div>
+      <p id="resultCount" class="hint" aria-live="polite"></p>
+      <div class="table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th scope="col">ID</th>
+              <th scope="col">Product</th>
+              <th scope="col">Price</th>
+              <th scope="col">Category</th>
+              <th scope="col">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="productBody"></tbody>
+        </table>
+      </div>
+      <p id="emptyState" class="empty hidden"></p>
+    </section>
+
+    <!-- Analytics -->
+    <section class="card" aria-labelledby="analytics-title">
+      <h2 id="analytics-title" class="section-title">Analytics</h2>
+      <div class="grid-2 inner">
+        <div>
+          <h3>Highlights</h3>
+          <ul class="insights" id="insights"></ul>
+          <div class="field">
+            <label for="reportType">Generate report</label>
+            <select id="reportType">
+              <option value="summary">Summary report</option>
+              <option value="budget">Budget products only</option>
+              <option value="premium">Premium products only</option>
+              <option value="valid">Valid records check</option>
+            </select>
+          </div>
+          <button type="button" id="reportBtn" class="btn btn-secondary">Run Report</button>
+        </div>
+        <div>
+          <h3>Category split</h3>
+          <div class="bars" id="bars"></div>
+          <pre id="reportOutput" class="report" aria-live="polite">Choose a report and press “Run Report”.</pre>
+        </div>
+      </div>
+    </section>
+  </main>
+
+  <footer class="app-footer">
+    <div class="container">JavaScript Capstone Mini Project &middot; HTML5, CSS3 &amp; Vanilla JavaScript</div>
+  </footer>
+
+  <script src="./script.js" defer></script>
+</body>
+</html>
