@@ -6,7 +6,7 @@ An intuitive, feature-rich web application for tracking product inventory, perfo
 
 ## 🚀 Live Demo
 
-🔗 [**Click Here to View Live Demo**](https://your-live-demo-link-here.com/)
+🔗 [**Click Here to View Live Demo**](https://inventoryiq-dusky.vercel.app/)
 
 ## 📸 Screenshots
 
